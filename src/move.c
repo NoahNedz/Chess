@@ -39,7 +39,7 @@ int convertUserInput(char* userInput){
 		return -1;
 	}
 	int numOffset = 0;
-	if(strcmp(userInput+1,"1") == 0 || strcmp(userInput+1,"1") == 0) numOffset = 56;
+	if(strncmp(userInput+1,"1",1) == 0 || strncmp(userInput+1,"1",1) == 0) numOffset = 56;
 	else if(strncmp(userInput+1,"2",1) == 0 || strncmp(userInput+1,"2",1) == 0) numOffset = 48;
 	else if(strncmp(userInput+1,"3",1) == 0 || strncmp(userInput+1,"3",1) == 0) numOffset = 40;
 	else if(strncmp(userInput+1,"4",1) == 0 || strncmp(userInput+1,"4",1) == 0) numOffset = 32;
@@ -96,7 +96,7 @@ int movePawn(){
 			piecePointer->location = endPos;
 			piecePointer->moveCount++;
 			piecePointerOpp->alive = 0;
-      printf("Moving pawn to take opp\n");
+      printf("Moving pawn\n");
 			return 0;
 		}
 		else return -1;
@@ -111,10 +111,70 @@ int movePawn(){
 	return -1;
 }
 int moveRook(){
-	return -1;
+  //check if start and end position are in the same row or col
+  int sameRow = translateToRow(startPos) == translateToRow(endPos);
+  int sameCol = translateToColumn(startPos) ==  translateToColumn(endPos);
+  if(!sameRow && !sameCol) return -1;
+     
+  int moveUp = 0;
+  int moveDown = 0;
+  int moveLeft = 0;
+  int moveRight = 0;
+  if(sameRow){
+    if(startPos < endPos) moveRight = 1;
+    else moveLeft = 1;
+  }
+  else if(endPos < startPos) moveUp = 1;
+  else moveDown = 1;
+  
+  //check if landing on your own piece
+  for(int i = 0; i < 16; i++){
+    piecePointerChecker = &black[i];
+    if(turnColor) piecePointerChecker = &white[i];
+    if(endPos == piecePointerChecker->location) return -1;
+  }
+  //check if any obstacles in the way
+  if(moveUp){
+  printf("Moving rook up\n");
+    for(int i = startPos; i != endPos; i -=8){
+      for(int j = 0; j < 16; j++){
+        if(i == white[j].location && piecePointer->location != i) return -1;
+        if(i == black[j].location && piecePointer->location != i) return -1;
+      }  
+    }
+  }
+  if(moveDown){
+    printf("Moving rook down\n");
+    for(int i = startPos; i != endPos; i +=8){
+      for(int j = 0; j < 16; j++){
+        if(i == white[j].location && piecePointer->location != i) return -1;
+        if(i == black[j].location && piecePointer->location != i) return -1;
+      }  
+    }
+  }
+  if(moveRight){
+    printf("Moving rook right\n");
+    for(int i = startPos; i%8 == 7; i++){
+      for(int j = 0; j < 16; j++){
+        if(i == white[j].location && piecePointer->location != i) return -1;
+        if(i == black[j].location && piecePointer->location != i) return -1;
+      }  
+    }
+  }
+  if(moveLeft){
+  printf("Moving rook left\n");
+    for(int i = startPos; i%8 == 0; i--){
+      for(int j = 0; j < 16; j++){
+        if(i == white[j].location && piecePointer->location != i) return -1;
+        if(i == black[j].location && piecePointer->location != i) return -1;
+      }  
+    }
+  }
+  piecePointer->location = endPos;
+  piecePointer->moveCount++;
+  if(takingOpponent == 1) piecePointerOpp->alive = 0;
+	return 0;
 }
-
-
 
 int validateMove(int startPosition, int endPosition){
 	startPos = startPosition;
@@ -128,7 +188,6 @@ int validateMove(int startPosition, int endPosition){
 	
 	if(turnNum % 2 == 0) turnColor = 1;
  
-
 	for(int i = 0; i < 16; i++){
  
     piecePointer = &white[i];
@@ -147,7 +206,6 @@ int validateMove(int startPosition, int endPosition){
     if(!turnColor) piecePointerOppChecker = &white[i];
     
 		if(piecePointerOppChecker->location == endPos){
-      printf("Taking opp\n");
       piecePointerOpp = piecePointerOppChecker;
 			takingOpponent = 1;
 			takingOpponentPos = i;

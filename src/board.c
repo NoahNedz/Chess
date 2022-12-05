@@ -77,7 +77,7 @@ int main(){
 		}
 		free(inputStart);free(inputStop);
 		turnNum++;
-		sleep(1);
+		sleep(2);
 	}
 
 return 0;
