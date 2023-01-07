@@ -22,7 +22,7 @@ piece *piecePointerOppChecker;
 
 int convertUserInput(char* userInput){
 	if(strlen(userInput) != 3){
-		printf("Invalid user input length");
+    snprintf(errStr, 255, "Invalid user input length");
 		return -1;
 	}
 	int letterOffset = 0;
@@ -35,7 +35,7 @@ int convertUserInput(char* userInput){
 	else if(strncmp(userInput,"G",1) == 0 || strncmp(userInput,"g",1) == 0) letterOffset = 6;
 	else if(strncmp(userInput,"H",1) == 0 || strncmp(userInput,"h",1) == 0) letterOffset = 7;
 	else {
-		printf("Invalid user input : %s\n", userInput);
+   snprintf(errStr, 255, "Invalid user input : %s", userInput);
 		return -1;
 	}
 	int numOffset = 0;
@@ -48,7 +48,7 @@ int convertUserInput(char* userInput){
 	else if(strncmp(userInput+1,"7",1) == 0 || strncmp(userInput+1,"7",1) == 0) numOffset = 8;
 	else if(strncmp(userInput+1,"8",1) == 0 || strncmp(userInput+1,"8",1) == 0) numOffset = 0;
 	else {
-		printf("Invalid user input : %s\n", userInput);
+		snprintf(errStr, 255, "Invalid user input : %s", userInput);
 		return -1;
 	}
   printf("%d+%d = %d\n", letterOffset,numOffset,letterOffset+numOffset);
@@ -71,7 +71,6 @@ int translateToColumn(int position){
   return position%8;
 }
 
-
 int movePawn(){
 
   //moving backwards as pawn check
@@ -84,28 +83,19 @@ int movePawn(){
 	if(firstMove == 1){
 		if( (turnColor && ((endPos == startPos-8) || (endPos == startPos-16))) ||
         (!turnColor && ((endPos == startPos+8) || (endPos == startPos+16)))){
-			piecePointer->location = endPos;
-			piecePointer->moveCount++;
-			printf("Moving pawn\n");
 			return 0;
 		}
 	}
 	if(takingOpponent == 1){
 		if( (turnColor && ((endPos == startPos-9) || (endPos == startPos-7)))|| 
         (!turnColor &&  ((endPos == startPos+9) || (endPos == startPos+7)))){
-			piecePointer->location = endPos;
-			piecePointer->moveCount++;
-			piecePointerOpp->alive = 0;
-      printf("Moving pawn\n");
 			return 0;
 		}
 		else return -1;
 	}
 	else if( (turnColor && (endPos == startPos-8)) ||
            (!turnColor && (endPos == startPos+8))){
-		piecePointer->location = endPos;
-		piecePointer->moveCount++;
-		printf("Moving pawn\n");
+
 		return 0;
 	}
 	return -1;
@@ -114,7 +104,10 @@ int moveRook(){
   //check if start and end position are in the same row or col
   int sameRow = translateToRow(startPos) == translateToRow(endPos);
   int sameCol = translateToColumn(startPos) ==  translateToColumn(endPos);
-  if(!sameRow && !sameCol) return -1;
+  if(!sameRow && !sameCol){
+    snprintf(errStr, 255, "Invalid movement");
+    return -1;
+  }
      
   int moveUp = 0;
   int moveDown = 0;
@@ -131,53 +124,104 @@ int moveRook(){
   for(int i = 0; i < 16; i++){
     piecePointerChecker = &black[i];
     if(turnColor) piecePointerChecker = &white[i];
-    if(endPos == piecePointerChecker->location) return -1;
+    if(endPos == piecePointerChecker->location){
+      snprintf(errStr, 255, "Placement is on one's own piece");
+      return -1;
+    }
   }
   //check if any obstacles in the way
-  if(moveUp){
-  printf("Moving rook up\n");
-    for(int i = startPos; i != endPos; i -=8){
-      for(int j = 0; j < 16; j++){
-        if(i == white[j].location && piecePointer->location != i) return -1;
-        if(i == black[j].location && piecePointer->location != i) return -1;
-      }  
+  int moveInc = 0;
+  if(moveUp == 1) moveInc = -8;
+  else if (moveDown == 1) moveInc = 8;
+  else if (moveRight == 1) moveInc = 1;
+  else moveInc = -1;
+  
+  for(int spotCheck = startPos + moveInc; spotCheck != endPos; spotCheck += moveInc){
+    for(int j = 0; j < 16; j++){
+      if(spotCheck == white[j].location || spotCheck == black[j].location ){
+        snprintf(errStr, 255, "Piece in the way of movement");
+        return -1;
+      }
     }
+    if(spotCheck > 63 || spotCheck < 0) break;
   }
-  if(moveDown){
-    printf("Moving rook down\n");
-    for(int i = startPos; i != endPos; i +=8){
-      for(int j = 0; j < 16; j++){
-        if(i == white[j].location && piecePointer->location != i) return -1;
-        if(i == black[j].location && piecePointer->location != i) return -1;
-      }  
-    }
-  }
-  if(moveRight){
-    printf("Moving rook right\n");
-    for(int i = startPos; i%8 == 7; i++){
-      for(int j = 0; j < 16; j++){
-        if(i == white[j].location && piecePointer->location != i) return -1;
-        if(i == black[j].location && piecePointer->location != i) return -1;
-      }  
-    }
-  }
-  if(moveLeft){
-  printf("Moving rook left\n");
-    for(int i = startPos; i%8 == 0; i--){
-      for(int j = 0; j < 16; j++){
-        if(i == white[j].location && piecePointer->location != i) return -1;
-        if(i == black[j].location && piecePointer->location != i) return -1;
-      }  
-    }
-  }
-  piecePointer->location = endPos;
-  piecePointer->moveCount++;
-  if(takingOpponent == 1) piecePointerOpp->alive = 0;
 	return 0;
 }
 
+int moveKnight(){
+  //check if landing on your own piece
+  for(int i = 0; i < 16; i++){
+    piecePointerChecker = &black[i];
+    if(turnColor) piecePointerChecker = &white[i];
+    if(endPos == piecePointerChecker->location){
+      snprintf(errStr, 255, "Placement is on one's own piece");
+      return -1;
+    }
+  }
+  int startRow = translateToRow(startPos);
+  int endRow = translateToRow(endPos);
+  
+  int startCol = translateToColumn(startPos);
+  int endCol = translateToColumn(endPos);
+  
+  if(abs(startRow - endRow) == 1 && abs(startCol - endCol) != 2) return -1;
+  if(abs(startRow - endRow) == 2 && abs(startCol - endCol) != 1) return -1;
+  return 0;
+}
+
+int moveBishop(){
+  //check if landing on your own piece
+  for(int i = 0; i < 16; i++){
+    piecePointerChecker = &black[i];
+    if(turnColor) piecePointerChecker = &white[i];
+    if(endPos == piecePointerChecker->location){
+      snprintf(errStr, 255, "Placement is on one's own piece");
+      return -1;
+    }
+  }
+  int startRow = translateToRow(startPos);
+  int endRow = translateToRow(endPos);
+  
+  int startCol = translateToColumn(startPos);
+  int endCol = translateToColumn(endPos);
+  
+  if(abs(startRow-endRow) != abs(startCol-endCol)){
+    snprintf(errStr, 255, "Not diagonal");
+    return -1;
+  }  
+  
+  int upRight = 0;
+  int upLeft = 0;
+  int downRight = 0;
+  int downLeft = 0;
+  
+  if(endRow > startRow && endCol > startCol) upRight = 1;
+  else if (endRow > startRow && endCol < startCol) upLeft = 1;
+  else if(endRow < startRow && endCol > startCol) downRight = 1;
+  else downLeft = 1;
+  
+  int moveInc = 0;
+  if(upRight == 1) moveInc = -7;
+  else if (upLeft == 1) moveInc = -9;
+  else if (downRight == 1) moveInc = 9;
+  else moveInc = 7;
+
+  
+  for(int spotCheck = startPos + moveInc ; spotCheck != endPos; spotCheck += moveInc){
+    for(int j = 0; j < 16; j++){
+      if(spotCheck == white[j].location || spotCheck == black[j].location ){
+        snprintf(errStr, 255, "Piece in the way of movement");
+        return -1;
+      }
+    }
+    if(spotCheck > 63 || spotCheck < 0) break;
+  } 
+  return 0;
+}
+
 int validateMove(int startPosition, int endPosition){
-	startPos = startPosition;
+	int rc = -1;
+  startPos = startPosition;
 	endPos = endPosition;
 	turnColor = 0;
 	pieceNum = 0;
@@ -186,6 +230,7 @@ int validateMove(int startPosition, int endPosition){
 	takingOpponentPos = 0;
 	firstMove = 0;
 	
+  if(startPos == endPos) return -1;
 	if(turnNum % 2 == 0) turnColor = 1;
  
 	for(int i = 0; i < 16; i++){
@@ -218,15 +263,27 @@ int validateMove(int startPosition, int endPosition){
   if(piecePointer->moveCount == 0) firstMove = 1;
     
 	if(strncmp(piecePointer->name,"p",1) == 0){
-		return movePawn();
+		rc = movePawn();
 	}
-	if(strncmp(piecePointer->name,"r",1) == 0){
-		return moveRook();
+	else if(strncmp(piecePointer->name,"r",1) == 0){
+		rc = moveRook();
 	}
-		
+ 	else if(strncmp(piecePointer->name,"k",1) == 0){
+		rc = moveKnight();
+	}
+	else if(strncmp(piecePointer->name,"b",1) == 0){
+		rc = moveBishop();
+	}
+  if(rc == 0){
+    piecePointer->location = endPos;
+    piecePointer->moveCount++;
+    if(takingOpponent == 1){
+      piecePointerOpp->alive = 0;
+      piecePointerOpp->location = -1;
+    }
+	}
 	
 	
-	
-   return 0;
+   return rc;
 }
 

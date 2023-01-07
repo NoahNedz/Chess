@@ -13,6 +13,7 @@ char* LeterEnd = "   A      B     C     D     E     F     G     H   ";
 
 int printBoard(){
    system("clear -x");
+   printf("%s\n", errStr);
    if(turnNum % 2 == 0) printf("White's turn\n");
    else printf("Black's turn\n");
    
@@ -53,7 +54,7 @@ int main(){
 		printf("Select Piece: ");
 		inputStart = (char *)malloc(bufsize * sizeof(char));
 		if(getline(&inputStart,&bufsize,stdin) <= 0){
-			printf("Invalid user input\n");
+			 snprintf(errStr, 255, "Invalid user input");
 			free(inputStart);
 			continue;
 		}	
@@ -63,7 +64,7 @@ int main(){
 		printf("\nInput Placement:");
 		inputStop = (char *)malloc(bufsize * sizeof(char));
 		if(getline(&inputStop,&bufsize,stdin) <= 0){
-			printf("Invalid user input\n");
+			snprintf(errStr, 255, "Invalid user input");
 			free(inputStop);
 			continue;
 		}	
@@ -72,12 +73,13 @@ int main(){
 		if(inputStopInt < 0){ free(inputStop); continue;}
 
 		if(validateMove(inputStartInt,inputStopInt) != 0){
-			printf("Invalid move");
+			//snprintf(errStr, 255, "Invalid move");
 			continue;
 		}
 		free(inputStart);free(inputStop);
 		turnNum++;
-		sleep(2);
+    snprintf(errStr, 255, " ");
+		//sleep(1);
 	}
 
 return 0;
