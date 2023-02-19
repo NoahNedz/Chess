@@ -1,3 +1,5 @@
+#define WHITE 1
+#define BLACK 0
 typedef struct piece{
    int color;
    int moveCount;
@@ -10,4 +12,4 @@ piece white[16];
 piece black[16];
 void initBlack();
 void initWhite();
-char* findPiece(int position);
+char* drawPieces(int position);
