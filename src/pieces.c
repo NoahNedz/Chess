@@ -3,7 +3,6 @@
 #include "../includes/pieces.h"
 #include <string.h>
 
-
 void initWhite(){
        white[0].color = 1;
        white[0].moveCount = 0;

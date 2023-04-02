@@ -35,17 +35,18 @@ int main(){
 		inputStop = (char *)malloc(bufsize * sizeof(char));
 		if(getline(&inputStop,&bufsize,stdin) <= 0){
 			snprintf(errStr, 255, "Invalid user input");
-			free(inputStop);
+			free(inputStart); free(inputStop);
 			continue;
 		}	
 		inputStopInt = convertUserInput(inputStop);
 		/////////////////////////////////
 		if(inputStopInt < 0){ free(inputStop); continue;}
 
-		if(validateMove(inputStartInt,inputStopInt) != 0){
+		if(validateMove(inputStartInt, inputStopInt, JUST_CHECK_FALSE) != 0){
+			free(inputStart); free(inputStop);
 			continue;
 		}
-		free(inputStart);free(inputStop);
+		free(inputStart); free(inputStop);
 		if(checkWinCondition()){
 			printBoard();
 			return 0;

@@ -5,20 +5,8 @@
 #include "../includes/board.h"
 #include <string.h>
 
-int startPos = 0;
-int endPos = 0;
-int turnColor = 0;
-int pieceNum = 0;
-int startValid = 0;
-int endValid = 1;
-int takingOpponent = 0;
-int takingOpponentPos = 0;
-int firstMove = 0;
 
-piece *piecePointer;
-piece *piecePointerOpp;
-piece *piecePointerChecker;
-piece *piecePointerOppChecker;
+int turnColor = 0;
 
 int convertUserInput(char* userInput){
 	if(userInput == NULL || strlen(userInput) != 3){
@@ -71,11 +59,11 @@ int translateToColumn(int position){
   return position%8;
 }
 
-int findMoveDirection(int startPos, int endPos){
-  int startRow = translateToRow(startPos);
-  int endRow = translateToRow(endPos);
-  int startCol = translateToColumn(startPos);
-  int endCol = translateToColumn(endPos);
+int findMoveDirection(int startPosition, int endPosition){
+  int startRow = translateToRow(startPosition);
+  int endRow = translateToRow(endPosition);
+  int startCol = translateToColumn(startPosition);
+  int endCol = translateToColumn(endPosition);
   int direction = -1;
   if     (endRow > startRow && endCol == startCol ) direction = UP;
   else if(endRow > startRow && endCol > startCol) direction = UPRIGHT;
@@ -110,49 +98,43 @@ int checkIfLandingOnOwnPiece(int position){
   return 0;
 }
 
-int movePawn(){
-  if(checkIfLandingOnOwnPiece(endPos) != 0){
-    return -1;
-  }
+int movePawn(int takingOpponent, int startPosition, int endPosition, int firstMove){
   //moving backwards as pawn check
   if(turnColor == WHITE){
-	  if(endPos >= startPos) return -1;
+	  if(endPosition >= startPosition) return -1;
   }
   else{
-    if(endPos <= startPos) return -1;
+    if(endPosition <= startPosition) return -1;
   }
 	if(firstMove == 1){
-		if( (turnColor == WHITE && ((endPos == startPos-8) || (endPos == startPos-16))) ||
-        (turnColor == BLACK && ((endPos == startPos+8) || (endPos == startPos+16)))){
+		if( (turnColor == WHITE && ((endPosition == startPosition-8) || (endPosition == startPosition-16))) ||
+        (turnColor == BLACK && ((endPosition == startPosition+8) || (endPosition == startPosition+16)))){
 			return 0;
 		}
 	}
 	if(takingOpponent == 1){
-		if( (turnColor == WHITE && ((endPos == startPos-9) || (endPos == startPos-7)))|| 
-        (turnColor == BLACK &&  ((endPos == startPos+9) || (endPos == startPos+7)))){
+		if( (turnColor == WHITE && ((endPosition == startPosition-9) || (endPosition == startPosition-7)))|| 
+        (turnColor == BLACK &&  ((endPosition == startPosition+9) || (endPosition == startPosition+7)))){
 			return 0;
 		}
 		else return -1;
 	}
-	else if( (turnColor == WHITE && (endPos == startPos-8)) ||
-           (turnColor == BLACK && (endPos == startPos+8))){
+	else if( (turnColor == WHITE && (endPosition == startPosition-8)) ||
+           (turnColor == BLACK && (endPosition == startPosition+8))){
 		return 0;
 	}
 	return -1;
 }
-int moveRook(){
+int moveRook(int startPosition, int endPosition, int firstMove){
   //check if start and end position are in the same row or col
-  int sameRow = translateToRow(startPos) == translateToRow(endPos);
-  int sameCol = translateToColumn(startPos) == translateToColumn(endPos);
+  int sameRow = translateToRow(startPosition) == translateToRow(endPosition);
+  int sameCol = translateToColumn(startPosition) == translateToColumn(endPosition);
   if(!sameRow && !sameCol){
     snprintf(errStr, 255, "Invalid movement");
     return -1;
   }
-  if(checkIfLandingOnOwnPiece(endPos) != 0){
-    snprintf(errStr, 255, "Cannot place on one's own piece");
-    return -1;
-  }
-  int direction = findMoveDirection(startPos, endPos);
+
+  int direction = findMoveDirection(startPosition, endPosition);
   int moveInc = 0;
   if      (direction == UP) moveInc = -8;
   else if (direction == DOWN) moveInc = 8;
@@ -163,8 +145,8 @@ int moveRook(){
     return -1;
   }
   //check if any obstacles in the way
-  int spotCheck = startPos + moveInc;
-  while(spotCheck != endPos){
+  int spotCheck = startPosition + moveInc;
+  while(spotCheck != endPosition){
     for(int j = 0; j < 16; j++){
       if(spotCheck == white[j].location || spotCheck == black[j].location ){
         snprintf(errStr, 255, "Piece in the way of movement");
@@ -177,28 +159,18 @@ int moveRook(){
 	return 0;
 }
 
-int moveKnight(){
-  //check if landing on your own piece
-  if(checkIfLandingOnOwnPiece(endPos) == 1){
-    snprintf(errStr, 255, "Cannot place on one's own piece");
-    return -1;
-  }
-  int startRow = translateToRow(startPos);
-  int endRow = translateToRow(endPos);
-  int startCol = translateToColumn(startPos);
-  int endCol = translateToColumn(endPos);
-  if(abs(startRow - endRow) == 1 && abs(startCol - endCol) != 2) return -1;
-  if(abs(startRow - endRow) == 2 && abs(startCol - endCol) != 1) return -1;
-  return 0;
+int moveKnight(int startPosition, int endPosition){
+  int startRow = translateToRow(startPosition);
+  int endRow = translateToRow(endPosition);
+  int startCol = translateToColumn(startPosition);
+  int endCol = translateToColumn(endPosition);
+  if(abs(startRow - endRow) == 1 && abs(startCol - endCol) == 2) return 0;
+  if(abs(startRow - endRow) == 2 && abs(startCol - endCol) == 1) return 0;
+  return -1;
 }
 
-int moveBishop(){
-  //check if landing on your own piece
-  if(checkIfLandingOnOwnPiece(endPos) == 1){
-    snprintf(errStr, 255, "Cannot place on one's own piece");
-    return -1;
-  }
-  int direction = findMoveDirection(startPos, endPos);
+int moveBishop(int startPosition, int endPosition){
+  int direction = findMoveDirection(startPosition, endPosition);
   int moveInc = 0;
   if      (direction == UPRIGHT) moveInc = -7;
   else if (direction == UPLEFT) moveInc = -9;
@@ -208,9 +180,9 @@ int moveBishop(){
     snprintf(errStr, 255, "Bishop must move diagonally");
     return -1;
   }
-  int spotCheck = startPos + moveInc ;
+  int spotCheck = startPosition + moveInc ;
   //check if any obstacles in the way
-  while(spotCheck != endPos){
+  while(spotCheck != endPosition){
     for(int j = 0; j < 16; j++){
       if(spotCheck == white[j].location || spotCheck == black[j].location ){
         snprintf(errStr, 255, "Piece in the way of movement");
@@ -223,13 +195,8 @@ int moveBishop(){
   return 0;
 }
 
-int moveQueen(){
-  //check if landing on your own piece
-  if(checkIfLandingOnOwnPiece(endPos) == 1){
-    snprintf(errStr, 255, "Cannot place on one's own piece");
-    return -1;
-  }
-  int direction = findMoveDirection(startPos, endPos);
+int moveQueen(int startPosition, int endPosition){
+  int direction = findMoveDirection(startPosition, endPosition);
   if(direction == -1){
     snprintf(errStr, 255, "Invalid move");
     return -1;
@@ -248,8 +215,8 @@ int moveQueen(){
     return -1;
   }
   //check if pieces in the way
-  int spotCheck = startPos + moveInc; 
-  while(spotCheck != endPos){
+  int spotCheck = startPosition + moveInc; 
+  while(spotCheck != endPosition){
     for(int j = 0; j < 16; j++){
       if(spotCheck == white[j].location || spotCheck == black[j].location ){
         snprintf(errStr, 255, "Piece in the way of movement");
@@ -261,19 +228,14 @@ int moveQueen(){
   }
   return 0;
 }
-int moveKing(){
-  //check if landing on your own piece
-  if(checkIfLandingOnOwnPiece(endPos) == 1){
-    snprintf(errStr, 255, "Cannot place on one's own piece");
-    return -1;
-  }
-  int direction = findMoveDirection(startPos, endPos);
+int moveKing(int startPosition, int endPosition, int firstMove){
+  int direction = findMoveDirection(startPosition, endPosition);
   if(direction == -1){
     snprintf(errStr, 255, "Invalid direction of movement");
     return -1;
   }
   //king can only move one tile, need to add logic for castling
-  int posDiff = abs(endPos - startPos);
+  int posDiff = abs(endPosition - startPosition);
   if(posDiff == 1 || posDiff == 7 || posDiff == 8 || posDiff == 9)
   {
     return 0;
@@ -282,29 +244,81 @@ int moveKing(){
   return -1;
 }
 
-int validateMove(int startPosition, int endPosition){
-	int rc = -1;
-  startPos = startPosition;
-	endPos = endPosition;
-	pieceNum = 0;
-	startValid = 0;
-	takingOpponent = 0;
-	takingOpponentPos = 0;
-	firstMove = 0;
+int checkMoveMyselfIntoCheck(piece *myPiece, int endPosition){
+  int rc = 1;
+  if(myPiece == NULL){
+    snprintf(errStr, 255, "checkMoveMyselfIntoCheck NULL piece");
+    return rc;
+  }
+  //find your king
+  piece *KING = NULL;
+  if(turnColor == BLACK) KING = &black[KING_INDEX];
+  else KING = &white[KING_INDEX];
 
-  //determine turn color
-  if(turnNum % 2 == 0) turnColor = WHITE;
-  else turnColor = BLACK;
+  //temporarily move piece to end position to validate move
+  int oldLocation = myPiece->location;
+  myPiece->location = endPosition;
+
+  //temporarily change turn color to opponent for the check
+  piece *checkOppPiece = NULL;
+  for(int i = 0; i < 16; i++){
+    if(turnColor == BLACK){
+      checkOppPiece = &white[i];
+      turnColor = WHITE; 
+    }
+    else{
+      checkOppPiece = &black[i];
+      turnColor = BLACK;
+    }
+    if(validateMove(checkOppPiece->location, KING->location, JUST_CHECK_TRUE) == 0){
+      snprintf(errStr, 255, "Cannot move into check. Piece %s at %d can get your king at %d", checkOppPiece->name, checkOppPiece->location, KING->location);
+      if(turnColor == BLACK) turnColor = WHITE;
+      else turnColor = BLACK;
+      myPiece->location = oldLocation;
+      return rc;
+    }
+    if(turnColor == BLACK) turnColor = WHITE;
+    else turnColor = BLACK;
+  }
+  myPiece->location = oldLocation;
+  rc = 0;
+  return rc;
+}
+
+int validateMove(int startPosition, int endPosition, int checkBool){
+	int rc = -1;
+  piece *piecePointer;
+  piece *piecePointerOpp;
+  piece *piecePointerChecker;
+  piece *piecePointerOppChecker;
+	int startValid = 0;
+	int takingOpponent = 0;
+	int firstMove = 0;
+
+  if(startPosition >= 64 || startPosition < 0){
+    snprintf(errStr, 255, "start position out of bounds : %d", startPosition);
+    return rc;
+  }
+  if(endPosition >= 64 || endPosition < 0){
+    snprintf(errStr, 255, "end position out of bounds : %d", endPosition);
+    return rc;
+  }
+
+
+  //determine turn color if trying to actually move
+  if(checkBool == JUST_CHECK_FALSE){ 
+    if(turnNum % 2 == 0) turnColor = WHITE;
+    else turnColor = BLACK;
+  }
 
   //check if start and finish are the same
-  if(startPos == endPos) return -1;
+  if(startPosition == endPosition) return -1;
 
   //see if start position is pointing to players piece
 	for(int i = 0; i < 16; i++){
     if(turnColor == BLACK) piecePointer = &black[i];
     else piecePointer = &white[i];
-  	if(piecePointer->location == startPos && piecePointer->alive){
-  			pieceNum = i;
+  	if(piecePointer->location == startPosition && piecePointer->alive){
   			startValid = 1;
         break;
 		}
@@ -313,15 +327,19 @@ int validateMove(int startPosition, int endPosition){
     snprintf(errStr, 255, "Start position does not point to one's own piece");
     return -1;
   }
+  //check if landing on your own piece
+  if(checkBool == JUST_CHECK_FALSE && checkIfLandingOnOwnPiece(endPosition) == 1){
+    snprintf(errStr, 255, "Cannot place on one's own piece");
+    return -1;
+  }
 
 	//determine if taking opponent
 	for(int i = 0; i < 16; i++){
     if(turnColor == BLACK) piecePointerOppChecker = &white[i];
     else piecePointerOppChecker = &black[i];
-		if(piecePointerOppChecker->location == endPos){
+		if(piecePointerOppChecker->location == endPosition){
       piecePointerOpp = piecePointerOppChecker;
 			takingOpponent = 1;
-			takingOpponentPos = i;
       break;
 		}
 	}
@@ -330,29 +348,37 @@ int validateMove(int startPosition, int endPosition){
   if(piecePointer->moveCount == 0) firstMove = 1;
  
 	if     (piecePointer->name[1] == 'p'){
-		rc = movePawn();
+		rc = movePawn(takingOpponent, startPosition, endPosition, firstMove);
 	}
 	else if(piecePointer->name[1] == 'r'){
-		rc = moveRook();
+		rc = moveRook(startPosition, endPosition, firstMove);
 	}
  	else if(piecePointer->name[1] =='k'){
-		rc = moveKnight();
+		rc = moveKnight(startPosition, endPosition);
 	}
 	else if(piecePointer->name[1] == 'b'){
-		rc = moveBishop();
+		rc = moveBishop(startPosition, endPosition);
 	}
   else if(piecePointer->name[1] == 'Q'){
-    rc = moveQueen();
+    rc = moveQueen(startPosition, endPosition);
   }
   else if(piecePointer->name[1] == 'K'){
-    rc = moveKing();
+    rc = moveKing(startPosition, endPosition, firstMove);
   }
   else{
     snprintf(errStr, 255, "Unable to determine piece type");
     rc = -1;
   }
-  if(rc == 0){
-    piecePointer->location = endPos;
+  if(rc != 0){
+    return rc;
+  }
+    //see if moving self into check
+  if(checkBool == JUST_CHECK_FALSE && checkMoveMyselfIntoCheck(piecePointer, endPosition) != 0){
+    snprintf(errStr, 255, "Bad move: moving self into check");
+    return -1;
+  }
+  if(rc == 0 && checkBool == JUST_CHECK_FALSE){
+    piecePointer->location = endPosition;
     piecePointer->moveCount++;
     if(takingOpponent == 1){
       piecePointerOpp->alive = 0;

@@ -10,7 +10,10 @@
 #define LEFT 6
 #define UPLEFT 7
 
-int validateMove(int startPosition, int endPosition);
+#define JUST_CHECK_TRUE 1
+#define JUST_CHECK_FALSE 0
+
+int validateMove(int startPosition, int endPosition, int checkBool);
 int convertUserInput(char* inputString);
 int translateToRow(int position);
 int translateToColumn(int position);
