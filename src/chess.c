@@ -8,6 +8,8 @@
 
 int main(){
 	turnNum = 0;
+	
+
 	initWhite();
 	initBlack();
 	printBoard();
@@ -20,11 +22,20 @@ int main(){
 		char* inputStart;
 		char* inputStop;
 		int inputStartInt = 0;
+		if(checkMateCheck()){
+			if(turnColor == WHITE){
+				printf("Black has won by checkmate\n");
+			}
+			else{
+				printf("White has won by checkmate\n");
+			}
+			return 0;
+		}
 		int inputStopInt = 0;
 		printf("Select Piece: ");
 		inputStart = (char *)malloc(bufsize * sizeof(char));
 		if(getline(&inputStart,&bufsize,stdin) <= 0){
-			 snprintf(errStr, 255, "Invalid user input");
+			snprintf(errStr, 255, "Invalid user input");
 			free(inputStart);
 			continue;
 		}	

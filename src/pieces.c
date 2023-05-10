@@ -44,13 +44,15 @@ void initWhite(){
        white[6].moveCount = 0;
        white[6].location = 59;
        white[6].alive = 1;
-       strncpy (white[6].name, "WK", sizeof(white[6].name));
+       strncpy (white[6].name, "WQ", sizeof(white[6].name));
        
        white[7].color = 1;
        white[7].moveCount = 0;
        white[7].location = 60;
        white[7].alive = 1;
-       strncpy (white[7].name, "WQ", sizeof(white[7].name));
+       strncpy (white[7].name, "WK", sizeof(white[7].name));
+       
+
        
 ////////////////////pawns
        
@@ -147,17 +149,19 @@ void initBlack(){
 	black[5].alive = 1;
        strncpy (black[5].name, "Bb", sizeof(black[5].name));
 
-	black[6].color = 0;
+       black[6].color = 0;
 	black[6].moveCount = 0;
 	black[6].location = 3;
 	black[6].alive = 1;
-       strncpy (black[6].name, "BK", sizeof(black[6].name));
+       strncpy (black[6].name, "BQ", sizeof(black[6].name));
 
 	black[7].color = 0;
 	black[7].moveCount = 0;
 	black[7].location = 4;
 	black[7].alive = 1;
-       strncpy (black[7].name, "BQ", sizeof(black[7].name));
+       strncpy (black[7].name, "BK", sizeof(black[7].name));
+
+
 
 	////////////////////pawns
 

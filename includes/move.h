@@ -12,11 +12,11 @@
 
 #define JUST_CHECK_TRUE 1
 #define JUST_CHECK_FALSE 0
+int turnColor;
 
 int validateMove(int startPosition, int endPosition, int checkBool);
 int convertUserInput(char* inputString);
 int translateToRow(int position);
 int translateToColumn(int position);
 int checkWinCondition();
-
-
+int checkMateCheck();

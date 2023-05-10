@@ -11,8 +11,14 @@ char* LeterEnd = "   A     B    C    D    E    F    G    H  ";
 int printBoard(){
    system("clear -x");
    printf("%s\n", errStr);
-   if(turnNum % 2 == 0) printf("White's turn\n");
-   else printf("Black's turn\n");
+   if(turnNum % 2 == 0){
+      printf("White's turn\n");
+      turnColor = WHITE;
+   }
+   else{
+      printf("Black's turn\n");
+      turnColor = BLACK;
+   }
    printf("\n  %s", dividerDash);
    for(int i=0; i < 64; i++){
       if(i%8 == 0){
