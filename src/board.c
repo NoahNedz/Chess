@@ -13,12 +13,11 @@ int printBoard(){
    printf("%s\n", errStr);
    if(turnNum % 2 == 0){
       printf("White's turn\n");
-      turnColor = WHITE;
    }
    else{
       printf("Black's turn\n");
-      turnColor = BLACK;
    }
+   printf("Turn #%d\n",turnNum);
    printf("\n  %s", dividerDash);
    for(int i=0; i < 64; i++){
       if(i%8 == 0){

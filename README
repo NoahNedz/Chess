@@ -2,7 +2,6 @@ February 19th, 2023
 
 *WIP*
 This is a simple chess program written in C just for fun.
-Currently check and checkmate are not implemented. 
 Hotseat only. Planning on adding LAN connectivity at a later date.
 
 To install and run:

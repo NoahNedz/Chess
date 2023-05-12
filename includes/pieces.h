@@ -1,6 +1,8 @@
 #define WHITE 1
 #define BLACK 0
 #define KING_INDEX 7
+#define ROOK_LEFT_INDEX 0
+#define ROOK_RIGHT_INDEX 1
 typedef struct piece{
    int color;
    int moveCount;
