@@ -2,9 +2,9 @@ February 19th, 2023
 
 *WIP*
 This is a simple chess program written in C just for fun.
-Hotseat only. Planning on adding LAN connectivity at a later date.
+Disabled hotseat for computer opponent logic testing
 
 To install and run:
-make ; ./chess.o
+make && ./chess
 
 ctrl-C to exit

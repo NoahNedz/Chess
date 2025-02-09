@@ -1,30 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "../includes/board.h"
-#include "../includes/pieces.h"
-#include "../includes/move.h"
+#include "../includes/chess.h"
 
+int turnNum = 0;
+
+int getTurnColor(int turnNum){
+	if(turnNum % 2 != 0){
+		return BLACK;
+	}
+	return WHITE;	
+}
 
 int main(){
-	turnNum = 0;
-	initWhite();
-	initBlack();
-	printBoard();
 	int inputStartInt = 0;
 	int inputStopInt = 0;
+	size_t bufsize = 3;
+	char* inputStart = NULL;
+	char* inputStop = NULL;
+	int turnColor = WHITE;
 
+	initWhite();
+	initBlack();
 	while(1){
-		printBoard();
-		size_t bufsize = 3;
-		char* inputStart;
-		char* inputStop;
-		int inputStartInt = 0;
-		int turnColor = WHITE;
-		if(turnNum % 2 != 0){
-      		turnColor = BLACK;
-   		}
-		if(checkMateCheck()){
+		printScreen();
+		turnColor = getTurnColor(turnNum);
+		if(checkMateCheck(turnColor)){
 			if(turnColor == WHITE){
 				printf("Black has won by checkmate\n");
 			}
@@ -33,7 +34,15 @@ int main(){
 			}
 			return 0;
 		}
-		int inputStopInt = 0;
+		
+		//COMPUTER'S TURN
+		if(turnColor == BLACK){
+			findBestMove(BLACK);
+			snprintf(errStr, 255, "");
+			turnNum++;
+			continue;
+		}
+
 		printf("\nSelect Piece: ");
 		inputStart = (char *)malloc(bufsize * sizeof(char));
 		if(getline(&inputStart,&bufsize,stdin) <= 0){
@@ -61,7 +70,7 @@ int main(){
 		}
 		free(inputStart); free(inputStop);
 		if(checkWinCondition()){
-			printBoard();
+			printScreen();
 			return 0;
 		}
 		turnNum++;

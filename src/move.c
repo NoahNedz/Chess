@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../includes/pieces.h"
-#include "../includes/move.h"
-#include "../includes/board.h"
+#include "../includes/chess.h"
 #include <string.h>
 
 int convertUserInput(char* userInput){
@@ -85,7 +83,7 @@ int findMoveDirection(int startPosition, int endPosition){
 }
 
 int checkIfLandingOnOwnPiece(int position, int turnColor){
-  char* findPiece = drawPieces(position);
+  char* findPiece = drawPiece(position);
   if(findPiece == NULL){
     snprintf(errStr, 255, "Unable to locate piece");
     return 1;
@@ -167,18 +165,18 @@ int movePawn(int takingOpponent, piece *myPiece, int endPosition, int firstMove)
   else{
     if(endPosition <= myPiece->location) return -1;
   }
-	if(firstMove == 1){
-		if( (myPiece->color == WHITE && ((endPosition == myPiece->location-8) || (endPosition == myPiece->location-16))) ||
-        (myPiece->color == BLACK && ((endPosition == myPiece->location+8) || (endPosition == myPiece->location+16)))){
-			return 0;
-		}
-	}
 	if(takingOpponent == 1){
 		if( (myPiece->color == WHITE && ((endPosition == myPiece->location-9) || (endPosition == myPiece->location-7)))|| 
         (myPiece->color == BLACK &&  ((endPosition == myPiece->location+9) || (endPosition == myPiece->location+7)))){
 			return 0;
 		}
 		else return -1;
+	}
+	if(firstMove == 1){
+		if( (myPiece->color == WHITE && ((endPosition == myPiece->location-8) || (endPosition == myPiece->location-16))) ||
+        (myPiece->color == BLACK && ((endPosition == myPiece->location+8) || (endPosition == myPiece->location+16)))){
+			return 0;
+		}
 	}
 	else if( (myPiece->color == WHITE && (endPosition == myPiece->location-8)) ||
            (myPiece->color == BLACK && (endPosition == myPiece->location+8))){
@@ -371,10 +369,10 @@ int moveKing(piece *myPiece, int endPosition, int firstMove, int checkBool){
 // no pieces should be moved if checkBool is true
 int validateMove(int startPosition, int endPosition, int checkBool, int turnColor){
 	int rc = -1;
-  piece *piecePointer;
-  piece *piecePointerOpp;
-  piece *piecePointerChecker;
-  piece *piecePointerOppChecker;
+  piece *piecePointer = NULL;
+  piece *piecePointerOpp = NULL;
+  piece *piecePointerChecker = NULL;
+  piece *piecePointerOppChecker = NULL;
 	int startValid = 0;
 	int takingOpponent = 0;
 	int firstMove = 0;
@@ -388,9 +386,11 @@ int validateMove(int startPosition, int endPosition, int checkBool, int turnColo
     return rc;
   }
   //check if start and finish are the same
-  if(startPosition == endPosition) return -1;
-
-  //see if start position is pointing to players piece
+  if(startPosition == endPosition){
+    snprintf(errStr, 255, "Start and end position are the same");
+    return rc;
+  }
+  //see if start position is pointing to player's piece
 	for(int i = 0; i < 16; i++){
     if(turnColor == BLACK) piecePointer = &black[i];
     else piecePointer = &white[i];
@@ -401,12 +401,12 @@ int validateMove(int startPosition, int endPosition, int checkBool, int turnColo
 	}
   if(startValid != 1){
     snprintf(errStr, 255, "Start position does not point to one's own piece");
-    return -1;
+    return rc;
   }
   //check if landing on your own piece
   if(checkIfLandingOnOwnPiece(endPosition, piecePointer->color) == 1){
     snprintf(errStr, 255, "Cannot place on one's own piece");
-    return -1;
+    return rc;
   }
 	//determine if taking opponent
 	for(int i = 0; i < 16; i++){
@@ -415,6 +415,7 @@ int validateMove(int startPosition, int endPosition, int checkBool, int turnColo
 		if(piecePointerOppChecker->location == endPosition){
       piecePointerOpp = piecePointerOppChecker;
 			takingOpponent = 1;
+      //printf("taking opp piece\n");
       break;
 		}
 	}
@@ -452,10 +453,11 @@ int validateMove(int startPosition, int endPosition, int checkBool, int turnColo
     //move it back if still moving self into check
     int savedLocation = piecePointer->location;
     int savedMoveCount = piecePointer->moveCount;
-    int savedOppLocation = piecePointerOpp->location;
+    int savedOppLocation = -1;
     piecePointer->location = endPosition;
     piecePointer->moveCount++;
     if(takingOpponent == 1){
+      savedOppLocation = piecePointerOpp->location;
       piecePointerOpp->alive = 0;
       piecePointerOpp->location = -1;
     }
@@ -498,4 +500,87 @@ int checkWinCondition(){
     return 1;
   }
   return 0;
+}
+
+int calculatePointSum(int turnColor){
+  piece *pieces = NULL;
+  int location = 0;
+  int locationWorth = 0;
+  int pieceWorth = 0;
+  int totalPieceWorth = 0;
+  int totalWorth = 0;
+
+  if(turnColor == WHITE){
+    pieces = white;
+  }
+  else{
+    pieces = black;
+  }
+
+  for(int i = 0; i < 16; i++){
+    if(pieces->alive){
+      location = pieces->location;
+      locationWorth = boardLocationWorth[location];
+      pieceWorth = pieces->value;
+      totalPieceWorth = locationWorth + pieceWorth;
+      totalWorth += totalPieceWorth;
+    }
+    pieces++;
+  }
+  return totalWorth;
+}
+
+void findBestMove(int turnColor){
+  int DEPTH = 1;
+  //copy the board state
+  piece whiteCopy[16] = {0};
+  piece blackCopy[16] = {0};
+  memcpy(blackCopy, black, sizeof(blackCopy));
+  memcpy(whiteCopy, white, sizeof(whiteCopy));
+  printf("total point worth for white = %d\n", calculatePointSum(WHITE));
+  printf("total point worth for black = %d\n", calculatePointSum(BLACK));
+
+  //iterate through each piece and try all possible moves and the reaction by the opposing player
+  //choose to move to the location which results in the highest delta in points
+  int highestPointMoveLocationStart = 0;
+  int highestPointMoveDest = 0;
+  int highestPointDelta = 0;
+  int pointDelta = 0;
+  char turnColorString[8];
+
+  piece *pieces;
+  if(turnColor == WHITE){
+    pieces = white;
+    snprintf(turnColorString, sizeof(turnColorString), "white");
+  }
+  else{
+    pieces = black;
+    snprintf(turnColorString, sizeof(turnColorString), "black");
+  }
+
+  int startLocation = 0;
+  for(int i = 0; i < 16; i++){
+    for(int ii = 0; ii < 64; ii++){
+      startLocation = pieces->location;
+      if(validateMove(pieces->location, ii, JUST_CHECK_FALSE, turnColor) == 0){
+        pointDelta = calculatePointSum(turnColor) - calculatePointSum(!turnColor);
+        if(pointDelta >= highestPointDelta){
+          highestPointMoveLocationStart = startLocation;
+          highestPointMoveDest = ii;
+          highestPointDelta = pointDelta;
+        }
+        memcpy(black, blackCopy, sizeof(black));
+        memcpy(white, whiteCopy, sizeof(white));
+      }
+    }
+    pieces++;
+  }
+  printf("Best move for %s is to move %d to %d\n", turnColorString, highestPointMoveLocationStart, highestPointMoveDest);
+  if(validateMove(highestPointMoveLocationStart, highestPointMoveDest, JUST_CHECK_FALSE, turnColor) != 0){
+    printf("something went wrong\n");
+  }
+
+
+
+  return;
 }

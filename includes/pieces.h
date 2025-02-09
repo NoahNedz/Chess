@@ -1,18 +1,20 @@
-#define WHITE 1
-#define BLACK 0
-#define KING_INDEX 7
-#define ROOK_LEFT_INDEX 0
-#define ROOK_RIGHT_INDEX 1
+#ifndef PIECES_GUARD
+#define PIECES_GUARD
+
 typedef struct piece{
    int color;
    int moveCount;
    int location;
    int alive;
+   int value;
    char name[3];
 }piece;
 
-piece white[16];
-piece black[16];
+extern piece white[16];
+extern piece black[16];
+extern int boardLocationWorth[64];
+
 void initBlack();
 void initWhite();
-char* drawPieces(int position);
+char* drawPiece(int position);
+#endif
