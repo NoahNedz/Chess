@@ -19,6 +19,9 @@ int main(){
 	char* inputStart = NULL;
 	char* inputStop = NULL;
 	int turnColor = WHITE;
+	move bestMoveForCOM;
+	bestMoveForCOM.startPosition = 0;
+	bestMoveForCOM.endPosition = 0;
 
 	initWhite();
 	initBlack();
@@ -37,7 +40,8 @@ int main(){
 		
 		//COMPUTER'S TURN
 		if(turnColor == BLACK){
-			findBestMove(BLACK);
+			findBestMove(BLACK, &bestMoveForCOM, 1, 0);
+			validateMove(bestMoveForCOM.startPosition, bestMoveForCOM.endPosition, JUST_CHECK_FALSE, turnColor);
 			snprintf(errStr, 255, "");
 			turnNum++;
 			continue;

@@ -54,6 +54,32 @@ int translateToColumn(int position){
   return position%8;
 }
 
+void postionToLetterNumber(int position, char* string){
+  if(string == NULL){
+    printf("input string NULL\n");
+    abort();
+  }
+  int colNum = translateToColumn(position);
+  if(colNum == 0) string[0] = 'A';
+  if(colNum == 1) string[0] = 'B';
+  if(colNum == 2) string[0] = 'C';
+  if(colNum == 3) string[0] = 'D';
+  if(colNum == 4) string[0] = 'E';
+  if(colNum == 5) string[0] = 'F';
+  if(colNum == 6) string[0] = 'G';
+  if(colNum == 7) string[0] = 'H';
+  int rowNum = translateToRow(position);
+  if(rowNum == 1) string[1] = '1';
+  if(rowNum == 2) string[1] = '2';
+  if(rowNum == 3) string[1] = '3';
+  if(rowNum == 4) string[1] = '4';
+  if(rowNum == 5) string[1] = '5';
+  if(rowNum == 6) string[1] = '6';
+  if(rowNum == 7) string[1] = '7';
+  if(rowNum == 8) string[1] = '8';
+}
+
+
 int findMoveDirection(int startPosition, int endPosition){
   int startRow = translateToRow(startPosition);
   int endRow = translateToRow(endPosition);
@@ -166,6 +192,10 @@ int movePawn(int takingOpponent, piece *myPiece, int endPosition, int firstMove)
     if(endPosition <= myPiece->location) return -1;
   }
 	if(takingOpponent == 1){
+    if((translateToRow(myPiece->location) - translateToRow(endPosition) >=2) ||
+       (translateToRow(myPiece->location) - translateToRow(endPosition) <=-2)){
+        return -1;
+       }
 		if( (myPiece->color == WHITE && ((endPosition == myPiece->location-9) || (endPosition == myPiece->location-7)))|| 
         (myPiece->color == BLACK &&  ((endPosition == myPiece->location+9) || (endPosition == myPiece->location+7)))){
 			return 0;
@@ -530,23 +560,29 @@ int calculatePointSum(int turnColor){
   return totalWorth;
 }
 
-void findBestMove(int turnColor){
-  int DEPTH = 1;
+//sets the global move[] array values
+void findBestMove(int turnColor, move* movePointer, int depth, int depthI){
   //copy the board state
   piece whiteCopy[16] = {0};
   piece blackCopy[16] = {0};
   memcpy(blackCopy, black, sizeof(blackCopy));
   memcpy(whiteCopy, white, sizeof(whiteCopy));
-  printf("total point worth for white = %d\n", calculatePointSum(WHITE));
-  printf("total point worth for black = %d\n", calculatePointSum(BLACK));
+  //printf("total point worth for white = %d\n", calculatePointSum(WHITE));
+  //printf("total point worth for black = %d\n", calculatePointSum(BLACK));
 
   //iterate through each piece and try all possible moves and the reaction by the opposing player
   //choose to move to the location which results in the highest delta in points
-  int highestPointMoveLocationStart = 0;
+  int highestPointMovePositionStart = 0;
   int highestPointMoveDest = 0;
-  int highestPointDelta = 0;
-  int pointDelta = 0;
+  int highestPointDelta = -999;
+  int pointDelta = -999;
   char turnColorString[8];
+  char moveStart[] = "A0";
+  char moveEnd[] = "A0";
+
+  move bestMoveForOP;
+	bestMoveForOP.startPosition = 0;
+	bestMoveForOP.endPosition = 0;
 
   piece *pieces;
   if(turnColor == WHITE){
@@ -564,23 +600,47 @@ void findBestMove(int turnColor){
       startLocation = pieces->location;
       if(validateMove(pieces->location, ii, JUST_CHECK_FALSE, turnColor) == 0){
         pointDelta = calculatePointSum(turnColor) - calculatePointSum(!turnColor);
+        if(turnColor == BLACK){
+          postionToLetterNumber(startLocation, moveStart);
+          postionToLetterNumber(ii, moveEnd);
+          //printf("Evaluating white's response to COM moving from %s to %s\n", moveStart, moveEnd);
+          findBestMove(!turnColor, &bestMoveForOP, 0, 0);
+          validateMove(bestMoveForOP.startPosition, bestMoveForOP.endPosition, JUST_CHECK_FALSE, !turnColor);
+          pointDelta = calculatePointSum(turnColor) - calculatePointSum(!turnColor);
+          //printBoard();
+        }
+        
         if(pointDelta >= highestPointDelta){
-          highestPointMoveLocationStart = startLocation;
+          highestPointMovePositionStart = startLocation;
           highestPointMoveDest = ii;
           highestPointDelta = pointDelta;
+          //if(turnColor == BLACK){
+            //printf("New best move for %s is to move %s to %s\n", turnColorString, moveStart, moveEnd);
+          //}
+          //printBoard();
         }
         memcpy(black, blackCopy, sizeof(black));
         memcpy(white, whiteCopy, sizeof(white));
       }
     }
+    
     pieces++;
   }
-  printf("Best move for %s is to move %d to %d\n", turnColorString, highestPointMoveLocationStart, highestPointMoveDest);
-  if(validateMove(highestPointMoveLocationStart, highestPointMoveDest, JUST_CHECK_FALSE, turnColor) != 0){
+  depthI++;
+
+  postionToLetterNumber(highestPointMovePositionStart, moveStart);
+  postionToLetterNumber(highestPointMoveDest, moveEnd);
+  if(validateMove(highestPointMovePositionStart, highestPointMoveDest, JUST_CHECK_TRUE, turnColor) != 0){
     printf("something went wrong\n");
+    printf("tried to have %s to move from %s to %s\n", turnColorString, moveStart, moveEnd);
+    abort();
+    return;
   }
 
-
-
+  //printf("Best move for %s is to move %s to %s\n", turnColorString, moveStart, moveEnd);
+  if(movePointer != NULL){
+    movePointer->startPosition = highestPointMovePositionStart;
+    movePointer->endPosition = highestPointMoveDest;
+  }
   return;
 }
